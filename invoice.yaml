@@ -1,0 +1,38 @@
+# Draft 2
+# Changes:
+#   Corrected typo : donées -> données
+
+number: 2022-001
+issued: 2022-05-13
+shipped: 2022-05-12
+
+company:
+    name: Alexandre Borghi
+    address_line_1: 6 Lieu-Dit Kerbodig
+    address_line_2: 56250 Saint-Nolff
+    phone: 0679480774
+    website: www.aborghi.fr
+    email: contact@aborghi.fr
+    siret: "91266790400011"
+
+client:
+    name: Dremml
+    address_line_1: 12 Rue du Pont à Tan
+    address_line_2: 56230 Questembert
+
+detail:
+    # Scheme:
+    #   description: String
+    #   amount: f32 = 1.0
+    #   unit: Heures | Unités = Heures
+    #   unit_price: f32 = 50.0
+
+    - description: Structure de données utilisateur
+    - description: Page de connexion
+    - description: Page de demande de récupération de mot de passe
+    - description: Page de réinitialisation de mot de passe
+    - description: Page d'administration
+      amount: 2.0
+    - description: Page d'administration de profil
+    - description: Système de traduction
+      amount: 2.0

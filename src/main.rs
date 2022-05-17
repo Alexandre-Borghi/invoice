@@ -4,9 +4,10 @@ use clap::Parser;
 use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Sequence};
 
-/// Simple program to greet a person
+/// Generates invoices for my freelance activity
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[clap(author = "Alexandre Borghi <borghi.alexandre.12@gmail.com>")]
+#[clap(version, about, long_about = None)]
 struct Args {
     /// Path to the invoice data YAML file
     path: PathBuf,
