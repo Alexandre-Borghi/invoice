@@ -1,9 +1,30 @@
-use std::{fs::File, ops::Deref, path::PathBuf};
+use std::{fs::File, path::PathBuf};
 
 use clap::Parser;
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
 use serde_yaml::{Mapping, Sequence, Value};
+
+// Constants
+const DEFAULT_AMOUNT: f64 = 1.0;
+const DEFAULT_UNIT: Unit = Unit::Hours;
+const DEFAULT_UNIT_PRICE: f64 = 50.0;
+
+struct Defaults {}
+
+impl Defaults {
+    const fn get_default_amount() -> f64 {
+        DEFAULT_AMOUNT
+    }
+
+    const fn get_default_unit() -> Unit {
+        DEFAULT_UNIT
+    }
+
+    const fn get_default_unit_price() -> f64 {
+        DEFAULT_UNIT_PRICE
+    }
+}
 
 /// Generates invoices for my freelance activity
 #[derive(Parser, Debug)]
@@ -17,10 +38,12 @@ struct Args {
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
     let f = File::open(args.path)?;
-    let invoice: InvoiceData =
+    let mut invoice: Invoice =
         serde_yaml::from_reader(f).expect("Error: Failed to deserialize invoice from file");
+    invoice.compute();
+    let invoice = invoice;
 
-    println!("{:?}", invoice);
+    // println!("{:?}", invoice);
 
     let mut handlebars = Handlebars::new();
 
@@ -41,20 +64,7 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct InvoiceData {
-    number: String,
-    issued: String,  // date
-    shipped: String, // date
-
-    company: Mapping,
-    client: Mapping,
-
-    detail: Sequence,
-
-    payment: Mapping,
-}
-
+#[derive(Debug, Serialize, Deserialize)]
 struct Invoice {
     number: String,
     issued: String,
@@ -65,26 +75,35 @@ struct Invoice {
 
     detail: Vec<Product>,
 
+    #[serde(default)]
+    total: f64,
+
     payment: Payment,
 }
 
 impl Invoice {
-    fn from_data(data: InvoiceData) -> Self {
-        Self {
-            number: data.number,
-            issued: data.issued,
-            shipped: data.shipped,
-
-            company: Company::from_mapping(&data.company),
-            client: Client::from_mapping(&data.client),
-
-            detail: Product::vec_from_sequence(&data.detail),
-
-            payment: Payment::from_mapping(&data.payment),
-        }
+    fn compute(&mut self) {
+        self.detail.iter_mut().for_each(Product::compute);
+        self.total = self.detail.iter().map(|p| p.total).sum();
     }
+
+    // fn from_data(data: InvoiceData) -> Self {
+    //     Self {
+    //         number: data.number,
+    //         issued: data.issued,
+    //         shipped: data.shipped,
+
+    //         company: Company::from_mapping(&data.company),
+    //         client: Client::from_mapping(&data.client),
+
+    //         detail: Product::vec_from_sequence(&data.detail),
+
+    //         payment: Payment::from_mapping(&data.payment),
+    //     }
+    // }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 struct Company {
     name: String,
     activity: String,
@@ -95,183 +114,63 @@ struct Company {
     siret: String,
 }
 
-impl Company {
-    fn from_mapping(mapping: &Mapping) -> Self {
-        Self {
-            name: get_string_from_mapping(mapping, "name"),
-            activity: get_string_from_mapping(mapping, "activity"),
-            address: string_vec_from_sequence(
-                mapping
-                    .get(&Value::from("activity"))
-                    .expect("expected value for key `address`")
-                    .as_sequence()
-                    .expect("expected `address` to be a sequence"),
-            ),
-            phone: Phone::from_mapping(
-                mapping
-                    .get(&Value::from("phone"))
-                    .expect("expected value for key `phone`")
-                    .as_mapping()
-                    .expect("expected value for `phone` to be a mapping"),
-            ),
-            website: get_string_from_mapping(mapping, "website"),
-            mail: get_string_from_mapping(mapping, "mail"),
-            siret: get_string_from_mapping(mapping, "siret"),
-        }
-    }
-}
-
+#[derive(Debug, Serialize, Deserialize)]
 struct Client {
     name: String,
     address: Vec<String>,
 }
 
-impl Client {
-    fn from_mapping(mapping: &Mapping) -> Self {
-        Self {
-            name: get_string_from_mapping(mapping, "name"),
-            address: string_vec_from_sequence(
-                mapping
-                    .get(&Value::from("address"))
-                    .expect("expected value for key `address`")
-                    .as_sequence()
-                    .expect("expected value for `address` to be a sequence"),
-            ),
-        }
-    }
-}
-
+#[derive(Debug, Serialize, Deserialize)]
 struct Phone {
     display: String,
     intl: String,
 }
 
-impl Phone {
-    fn from_mapping(mapping: &Mapping) -> Self {
-        Self {
-            display: get_string_from_mapping(mapping, "display"),
-            intl: get_string_from_mapping(mapping, "intl"),
-        }
-    }
-}
-
+#[derive(Debug, Serialize, Deserialize)]
 struct Product {
     description: String,
+    #[serde(default = "Defaults::get_default_amount")]
     amount: f64,
+    #[serde(default = "Defaults::get_default_unit")]
     unit: Unit,
+    #[serde(default = "Defaults::get_default_unit_price")]
     unit_price: f64,
+    #[serde(default)]
+    total: f64,
 }
 
 impl Product {
-    fn from_mapping(mapping: &Mapping) -> Self {
-        Self {
-            description: get_string_from_mapping(mapping, "description"),
-            amount: get_f64_from_mapping(mapping, "amount"),
-            unit: Unit::from_str(&get_string_from_mapping(mapping, "unit")).unwrap_or(Unit::Hours),
-            unit_price: get_f64_from_mapping(mapping, "unit_price"),
-        }
-    }
-
-    fn vec_from_sequence(sequence: &Sequence) -> Vec<Self> {
-        sequence
-            .into_iter()
-            .map(|v| {
-                v.as_mapping()
-                    .expect("expected value for element of `detail` to be a mapping")
-            })
-            .map(Product::from_mapping)
-            .collect()
+    fn compute(&mut self) {
+        self.total = self.amount * self.unit_price;
     }
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 enum Unit {
-    #[serde(rename = "hours")]
+    #[serde(rename(serialize = "Heures", deserialize = "hours"), alias = "hours")]
     Hours,
-    #[serde(rename = "units")]
+    #[serde(rename(serialize = "Unités", deserialize = "units"), alias = "units")]
     Units,
 }
 
-impl Unit {
-    fn from_str(string: &str) -> Option<Self> {
-        match string {
-            "hours" => Some(Self::Hours),
-            "units" => Some(Self::Units),
-            _ => None,
-        }
-    }
-}
-
+#[derive(Debug, Serialize, Deserialize)]
 struct Payment {
     r#type: PaymentType,
     delay: u64,
+    penalty: f64,
 }
 
-impl Payment {
-    fn from_mapping(mapping: &Mapping) -> Self {
-        Self {
-            r#type: PaymentType::from_str(&get_string_from_mapping(mapping, "type"))
-                .expect("expected value for key `type` to be a valid PaymentType variant"),
-            delay: get_u64_from_mapping(mapping, "delay"),
-        }
-    }
-}
-
+#[derive(Debug, Serialize, Deserialize)]
 enum PaymentType {
+    #[serde(
+        rename(serialize = "Virement", deserialize = "virement"),
+        alias = "virement"
+    )]
     Virement,
+    #[serde(rename(serialize = "Carte bancaire", deserialize = "cb"), alias = "cb")]
     CarteBancaire,
+    #[serde(rename(serialize = "Espèce", deserialize = "espece"), alias = "espece")]
     Espece,
+    #[serde(rename(serialize = "Chèque", deserialize = "cheque"), alias = "cheque")]
     Cheque,
-}
-
-impl PaymentType {
-    fn from_str(string: &str) -> Option<Self> {
-        match string {
-            "virement" => Some(Self::Virement),
-            "cb" => Some(Self::CarteBancaire),
-            "espece" => Some(Self::Espece),
-            "cheque" => Some(Self::Cheque),
-            _ => None,
-        }
-    }
-}
-
-fn get_string_from_mapping(mapping: &Mapping, key: &str) -> String {
-    let val = get_value_from_mapping(mapping, key);
-    val.as_str()
-        .expect(format!("value {val:?} for key `{key}` couldn't be converted to a string").as_str())
-        .to_string()
-}
-
-fn get_u64_from_mapping(mapping: &Mapping, key: &str) -> u64 {
-    let val = get_value_from_mapping(mapping, key);
-    val.as_u64()
-        .expect(format!("value {val:?} for key `{key}` couldn't be converted to a u64").as_str())
-}
-
-fn get_f64_from_mapping(mapping: &Mapping, key: &str) -> f64 {
-    let val = get_value_from_mapping(mapping, key);
-    val.as_f64()
-        .expect(format!("value {val:?} for key `{key}` couldn't be converted to an f64").as_str())
-}
-
-fn get_value_from_mapping(mapping: &Mapping, key: &str) -> Value {
-    mapping
-        .get(&Value::from(key))
-        .expect(format!("expected value for key `{key}`").as_str())
-        .to_owned()
-}
-
-fn string_vec_from_sequence(sequence: &Sequence) -> Vec<String> {
-    sequence
-        .into_iter()
-        .map(|v| {
-            v.as_str()
-                .expect(
-                    format!("expected element of `address` to be a string, instead found {v:?}")
-                        .as_str(),
-                )
-                .to_string()
-        })
-        .collect()
 }

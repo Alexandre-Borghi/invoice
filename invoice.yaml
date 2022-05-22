@@ -43,5 +43,6 @@ detail:
       amount: 2.0
 
 payment:
-    - type: virement # virement | cb | espece | cheque
-    - delay: 60 # in days
+    type: virement # virement | cb | espece | cheque
+    delay: 60 # in days
+    penalty: 3.0 # in %

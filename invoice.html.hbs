@@ -127,8 +127,9 @@
             <div class="company lines">
                 <p><strong>{{company.name}}</strong></p>
                 <p>{{company.activity}}</p>
-                <p>{{company.address_line_1}}</p>
-                <p>{{company.address_line_2}}</p>
+                {{#each company.address}}
+                    <p>{{this}}</p>
+                {{/each}}
                 <p>Tél : <a href="tel:{{company.phone.intl}}">{{company.phone.display}}</a></p>
                 <p>
                     Mail :
@@ -143,8 +144,9 @@
 
             <div class="client lines">
                 <p>{{client.name}}</p>
-                <p>{{client.address_line_1}}</p>
-                <p>{{client.address_line_2}}</p>
+                {{#each client.address}}
+                    <p>{{this}}</p>
+                {{/each}}
             </div>
 
             <div class="info lines">
@@ -170,31 +172,17 @@
                         </td>
                         <td style="text-align: right">{{amount}}</td>
                         <td style="text-align: left">{{unit}}</td>
-                        <td style="text-align: right">{{unit_price}}</td>
-                        <td style="text-align: right">{{total}}</td>
+                        <td style="text-align: right">{{unit_price}}€</td>
+                        <td style="text-align: right">{{total}}€</td>
                     </tr>
                     {{/each}}
-                    <tr class="even">
-                        <td style="text-align: left">Page de connexion</td>
-                        <td style="text-align: right">1</td>
-                        <td style="text-align: left">Heures</td>
-                        <td style="text-align: right">50€</td>
-                        <td style="text-align: right">50€</td>
-                    </tr>
-                    <tr class="odd">
-                        <td style="text-align: left">Système de traduction</td>
-                        <td style="text-align: right">2</td>
-                        <td style="text-align: left">Heures</td>
-                        <td style="text-align: right">50€</td>
-                        <td style="text-align: right">100€</td>
-                    </tr>
-                    <tr>
+                    {{!-- <tr>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
-                    </tr>
+                    </tr> --}}
                     <tr class="total">
                         <td style="text-align: left">
                             <strong>Total HT</strong>
@@ -202,7 +190,7 @@
                         <td style="text-align: right"></td>
                         <td style="text-align: left"></td>
                         <td style="text-align: right"></td>
-                        <td style="text-align: right"><strong>200€</strong></td>
+                        <td style="text-align: right"><strong>{{total}}€</strong></td>
                     </tr>
                     <tr class="total">
                         <td style="text-align: left">
@@ -217,17 +205,17 @@
             </table>
 
             <div class="info lines">
-                <p>Mode de règlement : virement</p>
+                <p>Mode de règlement : {{payment.type}}</p>
                 <p>
-                    Date limite de règlement : 60 jours après livraison ou fin
+                    Date limite de règlement : {{payment.delay}} jours après livraison ou fin
                     de prestation de services
                 </p>
-                <p>Pénalités pour retard de paiement : 3.00% par mois</p>
+                <p>Pénalités pour retard de paiement : {{payment.penalty}}% par mois</p>
             </div>
         </div>
         <footer class="lines">
-            <p>Alexandre Borghi</p>
-            <p>06 79 48 07 74 - contact@aborghi.fr</p>
+            <p>{{company.name}}</p>
+            <p>{{company.phone.display}} - {{company.mail}}</p>
         </footer>
     </body>
 </html>
