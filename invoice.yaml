@@ -9,15 +9,17 @@ shipped: 12/05/2022
 company:
     name: Alexandre Borghi
     activity: Conseil en informatique
-    address: 
+    address:
         - 6 Lieu-Dit Kerbodig
         - 56250 Saint-Nolff
-    phone: 
+    phone:
         display: 06 79 48 07 74
         intl: "+33679480774"
     website: www.aborghi.fr
     mail: contact@aborghi.fr
     siret: "91266790400011"
+    iban: FR76 1558 9569 3005 2526 7934 085
+    bic: CMBRFR2BXXX
 
 client:
     name: Dremml

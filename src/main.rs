@@ -3,7 +3,6 @@ use std::{fs::File, path::PathBuf};
 use clap::Parser;
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
-use serde_yaml::{Mapping, Sequence, Value};
 
 // Constants
 const DEFAULT_AMOUNT: f64 = 1.0;
@@ -43,8 +42,6 @@ fn main() -> std::io::Result<()> {
     invoice.compute();
     let invoice = invoice;
 
-    // println!("{:?}", invoice);
-
     let mut handlebars = Handlebars::new();
 
     handlebars
@@ -52,9 +49,9 @@ fn main() -> std::io::Result<()> {
         .expect("Failed to register template file");
 
     let html_path = format!("invoice-{}.html", invoice.number);
-    let pdf_path = format!("invoice-{}.pdf", invoice.number);
+    let _pdf_path = format!("invoice-{}.pdf", invoice.number);
 
-    let mut html_output = File::create(&html_path).expect("Failed to create html output file");
+    let html_output = File::create(&html_path).expect("Failed to create html output file");
     handlebars
         .render_to_write("invoice", &invoice, html_output)
         .expect("Failed to render template");
@@ -86,21 +83,6 @@ impl Invoice {
         self.detail.iter_mut().for_each(Product::compute);
         self.total = self.detail.iter().map(|p| p.total).sum();
     }
-
-    // fn from_data(data: InvoiceData) -> Self {
-    //     Self {
-    //         number: data.number,
-    //         issued: data.issued,
-    //         shipped: data.shipped,
-
-    //         company: Company::from_mapping(&data.company),
-    //         client: Client::from_mapping(&data.client),
-
-    //         detail: Product::vec_from_sequence(&data.detail),
-
-    //         payment: Payment::from_mapping(&data.payment),
-    //     }
-    // }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -112,6 +94,8 @@ struct Company {
     website: String,
     mail: String,
     siret: String,
+    iban: String,
+    bic: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
