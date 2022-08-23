@@ -1,10 +1,6 @@
-# Draft 2
-# Changes:
-#   Corrected typo : donées -> données
-
 number: 2022-001
-issued: 17/05/2022
-shipped: 12/05/2022
+issued: 31/01/1970
+shipped: 30/01/1970
 
 company:
     name: Alexandre Borghi
@@ -22,10 +18,10 @@ company:
     bic: CMBRFR2BXXX
 
 client:
-    name: Dremml
+    name: Company name
     address:
-        - 12 Rue du Pont à Tan
-        - 56230 Questembert
+        - Address line 1
+        - Address line 2
 
 detail:
     # Scheme:
@@ -34,15 +30,7 @@ detail:
     #   unit: hours | units = hours
     #   unit_price: f64 = 50.0
 
-    - description: Structure de données utilisateur
-    - description: Page de connexion
-    - description: Page de demande de récupération de mot de passe
-    - description: Page de réinitialisation de mot de passe
-    - description: Page d'administration
-      amount: 2.0
-    - description: Page d'administration de profil
-    - description: Système de traduction
-      amount: 2.0
+    - description: Description of the work
 
 payment:
     type: virement # virement | cb | espece | cheque
